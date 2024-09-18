@@ -31,29 +31,47 @@ const imap = {
     br: br,
 };
 
-export const Board = ({ pos, otherData }) => {
+export const Board = ({ pos, selArr, passClick }) => {
     const count = dims.count;
     const szxy = dims.szxy;
+
+    useEffect(() => {
+        console.log('selArr:', selArr);
+    }, [selArr]);
+
+    const checkSquare = (data) => {
+        const res = `${mps[data[0]]}${data[1]}`
+        res && passClick(res);
+    };
 
     const mainBoard = useMemo(() => {
         const rows = [];
         for (let i = 1; i < count + 1; i++) {
-
             const columns = [];
             for (let j = 1; j < count + 1; j++) {
                 const isEven = (i + j) % 2 === 0;
-
                 const gtm = Object.keys(pos).map(el => {
                     const rps = parseSome(el);
 
                     if (rps) {
                         if (rps[0] === j && rps[1] === i) {
+                            // console.log('_check_', el, pos[el], [j, i]);
                             return pos[el];
                         }
                     }
 
                     return null;
                 }).filter(el => el);
+
+                const isSel = () => {
+                    if (selArr) {
+                        return selArr[0] === j && selArr[1] === i;
+                    }
+
+                    return false;
+                };
+
+                const bgColor = isEven ? color.even : color.odd;
 
                 columns.push(
                     <div
@@ -63,19 +81,24 @@ export const Board = ({ pos, otherData }) => {
                             width: `${szxy}px`,
                             height: `${szxy}px`,
                             justifyContent: 'space-between',
-                            background: isEven ? color.even : color.odd,
+                            background: bgColor,
                         }}
                         // onMouseOver={() => console.log('OVER', mps[j], i)}
-                        onClick={() => console.log('CHECK: ', mps[j], i)}
+                        onClick={() => checkSquare([j, i])}
                     >
                         {
                             <div
-                                // draggable // TBD: drop
-                                style={{ cursor: 'pointer' }}
+                                draggable // TBD: drop
+                                style={{
+                                    // border: isSel() ? '2px solid white' : 'none',
+                                    border: isSel() ? `2px solid ${bgColor}` : 'none',
+                                    cursor: 'pointer',
+                                }}
                             >
                                 {
                                     gtm[0] &&
                                     <img
+                                        // draggable={true}
                                         width={48}
                                         height={48}
                                         src={imap[gtm[0]]}
@@ -92,7 +115,7 @@ export const Board = ({ pos, otherData }) => {
         }
 
         return rows.reverse();
-    }, [pos]);
+    }, [pos, selArr]);
 
     return (
         <div

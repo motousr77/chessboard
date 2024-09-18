@@ -10,15 +10,19 @@ const position01 = {
     a1: 'br',
 };
 
+const getNums = (data) => [smp[data[0]], parseInt(data[1])];
 // const getChars = (data) => [mps[data[0]], data[1]];
+// const chekPresent = (cll, obj) => Object.keys(obj).includes(cll);
+
+const hld = [];
 
 const App = () => {
     const [pos, setPos] = useState(position01);
     const [text, setText] = useState('');
-    const [someMove, setSomeMove] = useState();
+    const [someSelect, setSomeSelect] = useState(null);
     const [warnText, setWarnText] = useState(null);
 
-    const handleCheck = () => {
+    const manualCheck = () => {
         if (text) {
             const tmp = text.split(' ');
             const from = tmp[0];
@@ -39,13 +43,55 @@ const App = () => {
         }
     };
 
+    const resetSelection = () => {
+        hld.splice(0);
+        setSomeSelect(null);
+    };
+
+    const passSelect = (cell) => {
+        if (cell) {
+            if (hld.length === 0 && Object.keys(pos).includes(cell)) {
+                hld.push(cell);
+                setSomeSelect(getNums(cell));
+                // setSomeSelect(cell);
+            } else if (hld.length > 0) {
+                hld.push(cell);
+            } else {
+                resetSelection();
+            }
+
+            console.log('HLD:', hld);
+            
+            if (hld.length === 2 && Object.keys(pos).includes(hld[0])) {
+                if (hld[0] !== hld[1]) {
+                    const prev = JSON.parse(JSON.stringify(pos));
+                    const tmpFrom = prev[hld[0]];
+                    delete prev[hld[0]];
+                    prev[hld[1]] = tmpFrom;
+                    setPos(prev);
+                    resetSelection();
+                } else {
+                    resetSelection();
+                }
+            }
+        }
+    };
+
     useEffect(() => {
         console.log('POS:', pos);
     }, [pos]);
 
+    // useEffect(() => {
+    //     console.log('preselect:', preselect);
+    // }, [preselect]);
+
     return (
         <div style={{ padding: `${dims.szxy}px` }}>
-            <Board pos={pos}/>
+            <Board
+                pos={pos}
+                selArr={someSelect}
+                passClick={passSelect}
+            />
             <br/>
             <input
                 type='text'
@@ -53,13 +99,12 @@ const App = () => {
                 value={text}
                 onChange={ev => setText(ev.target.value)}
             />
-            <button onClick={handleCheck}>check</button>
+            <button onClick={manualCheck}>check</button>
             <br/>
             {
                 warnText &&
                 <label htmlFor='asdf'>{warnText}</label>
             }
-            {/* <input type="text" id="name" name="name" required minlength="4" maxlength="8" size="10" /> */}
         </div>
     );
 };
